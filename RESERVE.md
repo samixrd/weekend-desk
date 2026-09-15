@@ -57,7 +57,39 @@ a venue-wide effect"* — descriptive, rule unchanged.
 
 ## Forward plan (S3 asset)
 
-Three-venue hourly bid/ask/depth/OI/funding collector (same tape format,
-separate file, frozen cutoffs) — if built, it must never touch the WD
-collector or root schedule. ~5 weekends of executable cross-venue tape =
-the minimum honest basis for an executable-arbitrage entry later.
+Three-venue hourly bid/ask/depth/OI/funding collector: **BUILT**
+(`weekend_collector_v2.py`, scheduled `WeekendDeskV2`, separate tape
+`collected_v2/`, own hash-chain — WD collector untouched and hash-locked).
+
+### Frozen conventions (2026-09-16, per CTO review)
+- **Universe = all 13 common stock-perp symbols**, pre-declared.
+  TSLA/NVDA/AAPL = *exploratory strong-effect subset*; SPY = *exploratory
+  negative control*. Selection is never collapsed into the claimed universe.
+- **Sampling:** weekday hourly at HH:00:00 UTC (historically compatible
+  with the 1h backtest); weekend window every 5 min — the hourly grid is
+  always contained in the finer tape. Forward and backtest horizons are
+  comparable by construction.
+- **Formula (frozen for this experiment):**
+  `F_t = ⅓ Σ_v log P_{v,t}` → `D_{v,t} = log P_v − F` →
+  `D̃ = D − Σ carry(fund_A − fund_B)` using **actual settlement timestamps
+  and signed cash-flow convention** (report prints gross / −fees /
+  −BG funding / +BN funding / = net, line by line) →
+  `z = D̃ / EWMA_σ(ΔD̃, λ=.97)` → **pre-specified research trigger |z| ≥ 2**
+  (a trigger, not an "optimal threshold"), 6h hold, non-overlapping.
+  Half-life is reported descriptively, never as a knob.
+
+### Cluster-robust inference (round9) — the effect survives
+Day-clustered episode means (removes volatility clustering, same-day
+simultaneity, venue-level bursts):
+
+| sym | episodes | naive t | day-clusters | **cluster t** |
+|---|---|---|---|---|
+| TSLA | 41 | +6.3 | 29 | **+7.0** |
+| NVDA | 45 | +8.1 | 31 | **+9.5** |
+| AAPL | 41 | +5.9 | 30 | **+7.6** |
+| SPY  | 63 | +7.1 | 37 | **+8.1** |
+
+(Cluster t exceeding naive t = episodes are NOT stacking on shared shock
+days — the dependence the CTO worried about is measurably absent in this
+sample. SPY's fee-adjusted weakness still stands: +7 bps gross < 24 bps
+fees — negative control behaves as declared.)
