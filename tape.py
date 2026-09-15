@@ -35,10 +35,11 @@ def load_records():
     for f in sorted(glob.glob(os.path.join(ROOT, "collected", "*.jsonl"))):
         with open(f, encoding="utf-8") as fh:
             for ln, line in enumerate(fh):
-                line = line.strip()
-                if not line: continue
-                r = json.loads(line)
+                raw = line.strip()
+                if not raw: continue
+                r = json.loads(raw)
                 r["_file"] = os.path.basename(f); r["_line"] = ln
+                r["_raw"] = raw  # raw JSONL text: the leaf-hashing unit (browser-reproducible)
                 recs.append(r)
     recs.sort(key=lambda r: (r["utc"], r["_file"], r["_line"]))
     return recs
@@ -51,10 +52,12 @@ def canon(r):
 def build_chain(recs):
     prev = "GENESIS"
     for r in recs:
-        h = sha((prev + canon(r)).encode())
-        r["_rec_hash"] = sha(canon(r).encode())
-        r["_chain"] = h; prev = h
+        # chain over raw lines (UTF-8 bytes): any inserted/deleted/edited line
+        # breaks every downstream hash AND is browser-reproducible exactly
+        h = sha((prev + r["_raw"]).encode()); r["_chain"] = h; prev = h
     return recs, prev
+
+def rec_leaf(r): return sha(r["_raw"].encode("utf-8"))
 
 def merkle_root(leaves):
     if not leaves: return "EMPTY"
@@ -76,11 +79,11 @@ def seg_root(recs, monday):
     fri0 = datetime.datetime(m.year,m.month,m.day,tzinfo=datetime.timezone.utc) - datetime.timedelta(days=3)
     cut = datetime.datetime(m.year,m.month,m.day,tzinfo=datetime.timezone.utc) - datetime.timedelta(hours=24-CUTOFF_HOUR_UTC)  # Sun 17:00 UTC
     seg = [r for r in recs if fri0 <= datetime.datetime.fromisoformat(r["utc"]) <= cut]
-    leaves = [r["_rec_hash"] for r in seg]
+    leaves = [rec_leaf(r) for r in seg]
     # chain restricted segment continuity: recompute chain over seg only, from GENESIS
     prev = "GENESIS"
     for r in seg:
-        prev = sha((prev + canon(r)).encode())
+        prev = sha((prev + r["_raw"]).encode())
     return merkle_root(leaves), len(seg), prev
 
 def hashes_files():
