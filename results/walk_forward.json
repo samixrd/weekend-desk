@@ -1,0 +1,34 @@
+[
+ {
+  "fold_oos_weekend": "2026-08-15",
+  "fit_n": 8,
+  "fit_rule": "continuation",
+  "oos_ret_pct": 0.943,
+  "frozen_sign_rule_ret_pct": 0.943,
+  "always_long_ret_pct": -0.943
+ },
+ {
+  "fold_oos_weekend": "2026-08-22",
+  "fit_n": 9,
+  "fit_rule": "continuation",
+  "oos_ret_pct": -0.154,
+  "frozen_sign_rule_ret_pct": -0.154,
+  "always_long_ret_pct": 0.154
+ },
+ {
+  "fold_oos_weekend": "2026-08-29",
+  "fit_n": 10,
+  "fit_rule": "continuation",
+  "oos_ret_pct": 0.136,
+  "frozen_sign_rule_ret_pct": 0.136,
+  "always_long_ret_pct": -0.136
+ },
+ {
+  "fold_oos_weekend": "2026-09-05",
+  "fit_n": 11,
+  "fit_rule": "continuation",
+  "oos_ret_pct": 0.079,
+  "frozen_sign_rule_ret_pct": 0.079,
+  "always_long_ret_pct": -0.079
+ }
+]
