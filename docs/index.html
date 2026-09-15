@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekend Desk — the tape that answers</title>
+<style>
+:root{--paper:#f4f1ea;--ink:#141310;--mut:#7a756b;--line:#d8d3c8;--acc:#0E6E4E;--bad:#a23020;}
+*{box-sizing:border-box;margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 "Iowan Old Style",Georgia,serif;}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+header{border-bottom:3px double var(--ink);padding:28px 24px 14px;max-width:980px;margin:0 auto}
+h1{font-size:clamp(28px,5vw,44px);letter-spacing:-.5px}
+h1 small{font-size:.35em;letter-spacing:2px;color:var(--mut);display:block;text-transform:uppercase}
+.sub{color:var(--mut);font-style:italic;margin-top:6px}
+main{max-width:980px;margin:0 auto;padding:20px 24px 60px}
+section{border:1px solid var(--line);background:#faf8f3;padding:18px 20px;margin:18px 0;position:relative}
+h2{font-size:13px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--ink);padding-bottom:6px;margin-bottom:12px}
+h2 em{float:right;font-style:normal;color:var(--mut);letter-spacing:0;text-transform:none}
+.kv{display:grid;grid-template-columns:180px 1fr;gap:4px 14px;font-size:14px}
+.kv b{color:var(--mut);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+th{border-bottom:1.5px solid var(--ink)}
+.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+.ok{color:var(--acc);font-weight:700}.fail{color:var(--bad);font-weight:700}.pend{color:var(--mut)}
+button{background:var(--ink);color:var(--paper);border:0;padding:9px 16px;font:12px "IBM Plex Mono",monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+button:hover{background:var(--acc)}
+.hint{font-size:12px;color:var(--mut);margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}.kv{grid-template-columns:120px 1fr}}
+a{color:var(--acc)}
+footer{max-width:980px;margin:0 auto;padding:16px 24px 40px;border-top:1px solid var(--line);color:var(--mut);font-size:12px}
+#live td{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.pill{display:inline-block;border:1px solid var(--ink);padding:0 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.pill.g{border-color:var(--acc);color:var(--acc)}
+#verdict{font-size:17px;font-weight:700;margin-top:10px}
+pre{background:#efece4;border:1px solid var(--line);padding:10px;font-size:11.5px;overflow:auto;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1><small>Bitget AI Hackathon S2 · Alpha Factory · After-Hours Information Pricing</small>WEEKEND&nbsp;DESK</h1>
+  <p class="sub">Does the weekend repricing of a 24/7 stock perpetual carry predictive information about the next native-equity open? The rule was frozen before the tape ran. The tape answers — and this page lets you check the tape in your own browser.</p>
+</header>
+<main>
+
+<section id="quote">
+  <h2>01 · Live market <span class="pill" id="q-state">loading…</span><em>Bitget public API — no key</em></h2>
+  <div class="kv" id="q-grid"><b>Symbol</b><span>SPYUSDT · TSLAUSDT · AAPLUSDT perpetual futures</span></div>
+  <div class="hint" id="q-note">US equity market state and perp quotes, pulled client-side.</div>
+</section>
+
+<div class="grid2">
+<section>
+  <h2>02 · Sealed before data <em>protocol &amp; prediction</em></h2>
+  <div class="kv">
+    <b>Protocol</b><span>v1.2, frozen 2026-09-14/15 · <a href="https://github.com/samixrd/weekend-desk/blob/master/PROTOCOL.md">read</a></span>
+    <b>Hash-lock</b><span class="mono" id="phashes">loading…</span></span>
+    <b>Prediction</b><span><a href="https://github.com/samixrd/weekend-desk/blob/master/PREDICTION_SEALED.md">sealed file</a> — failure conditions declared in advance</span>
+    <b>Rule</b><span class="mono">position = sign(Sun16/Fri21 mid ratio − 1) · zero parameters</span>
+  </div>
+</section>
+<section>
+  <h2>03 · Machine state <em>author not in the loop</em></h2>
+  <div class="kv">
+    <b>Fri 00:00 UTC</b><span>collector: hourly bid/ask/depth/OI/funding</span>
+    <b>Sun 17:20 UTC</b><span>tape root committed + posted on X</span>
+    <b>Mon 21:30 UTC</b><span>witness agent: verify → settle ONCE → publish unedited</span>
+    <b>Repo</b><span class="mono">github.com/samixrd/weekend-desk</span>
+  </div>
+</section>
+</div>
+
+<section id="tape">
+  <h2>04 · The tape, verified in your browser <em>client-side SHA-256 · WebCrypto</em></h2>
+  <p style="font-size:14px;margin-bottom:10px">Every collector record is one line of raw JSONL. The weekend root is the SHA-256 Merkle tree over those exact line bytes, up to the frozen Sun 17:00 UTC cutoff. Recompute it below — if any record was ever altered, the root you compute will not match the root committed on Sunday and posted on X.</p>
+  <button id="vbtn" onclick="verifyTape()">Fetch tape · recompute root · compare to manifest</button>
+  <div id="verdict"></div>
+  <div class="hint" id="vlog"></div>
+</section>
+
+<section>
+  <h2>05 · What we know so far <em>exploratory, pre-freeze — labeled honestly</em></h2>
+  <table>
+    <tr><th>Fact (OBSERVED)</th><th class="num">Value</th></tr>
+    <tr><td>Weekend share of SPY-perp volume (12 weekends, daily bars)</td><td class="num">15.1%</td></tr>
+    <tr><td>Weekend move → native Monday open gap (SPY, r, n=9)</td><td class="num">+0.55</td></tr>
+    <tr><td>Basket weekend → BTC weekend move (crypto-beta control)</td><td class="num">≈0.05</td></tr>
+    <tr><td>Placebo mid-week window, same structure (SPY)</td><td class="num">−0.68 (flips)</td></tr>
+    <tr><td>Walk-forward OOS, 4 weekend folds, mid-price proxy</td><td class="num">+0.25%/wk vs −0.25 always-long</td></tr>
+  </table>
+  <div class="hint">Every number is re-computable from <span class="mono">weekend_probes.py / attack_round3.py / walk_forward.py</span>. The frozen rule's claim rests only on the sealed forward test — shown next once settled.</div>
+</section>
+
+<section id="result">
+  <h2>05b · Forward settlement <span class="pill" id="r-state">awaiting Mon 21:30 UTC</span></h2>
+  <div id="rbody" class="mono" style="font-size:13px">The witness agent writes <span class="mono">results/forward_rows.json</span> after settlement; this section renders it automatically — same pipeline, zero manual edits, win or lose.</div>
+</section>
+
+<section>
+  <h2>06 · Reserve notebook <em>not submitted — earned later</em></h2>
+  <p style="font-size:14px">Binance leads Bitget tick-for-tick intraday (corr +0.54 at h+1)… yet in the closure window, <i>Bitget's</i> repricing maps onto the native open (r=+0.55/+0.57 vs Binance −0.47/+0.22). Venue leadership is regime-dependent. Convergence episodes survive placebo, sign-shuffle, and day-clustered inference (t≈7–9). <a href="https://github.com/samixrd/weekend-desk/blob/master/RESERVE.md">RESERVE.md</a> — executable evidence first, claims after.</p>
+</section>
+
+<footer>
+  Weekend Desk — a deliberately simple alpha inside a deliberately serious verification machine. · <a href="https://github.com/samixrd/weekend-desk">source</a> · <a href="https://forms.gle/GyWZCMCPocgJdJon6">S2 submission portal</a> · built by samixrd for @Bitget_AI Base Camp Hackathon S2. Nothing on this page requires an API key or a login. Not investment advice; strategies lose money too — ask the tape.
+</footer>
+</main>
+
+<script>
+const REPO="samixrd/weekend-desk", BR="master";
+const RAW=(p)=>`https://raw.githubusercontent.com/${REPO}/${BR}/`+p;
+async function j(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status+" "+u);return r.json();}
+
+/* 01 live quote */
+(async()=>{
+  try{
+    const d=await j("https://api.bitget.com/api/v2/mix/market/tickers?productType=usdt-futures");
+    const m={};d.data.forEach(t=>m[t.symbol]=t);
+    const now=new Date();const etHr=((now.getUTCHours()-4)+24)%24; // rough ET
+    const closed=(()=>{const wd=now.getUTCDay();const h=now.getUTCHours();return wd===6||wd===0||(wd===5)||(wd===1&&h<13);})();
+    let h="";
+    for(const s of ["SPYUSDT","AAPLUSDT","TSLAUSDT"]){
+      const t=m[s];if(!t)continue;
+      const ch=(+t.change24h*100).toFixed(2);
+      h+=`<b>${s}</b><span class="num">$${(+t.lastPr).toFixed(2)} <span style="color:${ch>=0?'var(--acc)':'var(--bad)'}">${ch>=0?'+':''}${ch}%</span> · bid ${t.bidPr}/ask ${t.askPr} · spread <span class="mono">${((t.askPr-t.bidPr)/t.lastPr*1e4).toFixed(1)}bps</span> · OI ${(t.holdingAmount/1e3).toFixed(1)}k</span>`;
+    }
+    h+=`<b>Native market</b><span>${closed?"CLOSED — the weekend tape is the only market":"open — both markets live"}</span>`;
+    document.getElementById("q-grid").innerHTML=h;
+    document.getElementById("q-state").textContent="live";
+    document.getElementById("q-state").classList.add("g");
+  }catch(e){document.getElementById("q-state").textContent="offline";}
+  /* protocol hashes */
+  try{
+    const t=await (await fetch(RAW("PROTOCOL_HASH.txt"))).text();
+    document.getElementById("phashes").innerHTML=t.split("\n").filter(Boolean).map(l=>l.slice(0,12)+"… "+l.split("*")[1]).join("<br>");
+  }catch(e){document.getElementById("phashes").textContent="—";}
+  /* result section */
+  try{
+    const rows=await j(RAW("results/forward_rows.json"));
+    document.getElementById("r-state").textContent="settled";
+    let h="<table><tr><th>Monday</th><th>w%</th><th>pos</th><th>entry gate</th><th>exit gate</th><th class='num'>gross</th><th class='num'>net</th><th>status</th></tr>";
+    for(const t of rows){h+=`<tr><td>${t.monday||"—"}</td><td class='num'>${(t.w_pct??"—")}</td><td>${t.position??"—"}</td><td>${t.entry?t.entry.gate:"—"}</td><td>${t.exit?t.exit.gate:"—"}</td><td class='num'>${t.gross_pct??"—"}</td><td class='num'>${t.net_pct??"—"}</td><td>${t.status||""}</td></tr>`;}
+    h+="</table><pre>"+((await (await fetch(RAW("results/FORWARD_RESULT.md"))).text()).slice(0,4000))+"</pre>";
+    document.getElementById("rbody").innerHTML=h;
+  }catch(e){/* awaiting settlement */}
+})();
+
+/* 04 browser verification */
+async function sha256hex(bytes){
+  const d=await crypto.subtle.digest("SHA-256",bytes);
+  return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function verifyTape(){
+  const log=document.getElementById("vlog"),v=document.getElementById("verdict");
+  v.textContent="";log.textContent="";
+  const put=(s)=>log.innerHTML+=s+"<br>";
+  try{
+    // manifest of most recent committed weekend
+    let man=null, monday="2026-09-21";
+    for(const m of ["2026-09-21","2026-09-28","2026-10-05"]){
+      try{man=await j(RAW("results/weekend_"+m+"/manifest.json"));monday=m;break;}catch(e){}
+    }
+    if(!man){v.innerHTML="<span class='pend'>No weekend root committed yet — first commitment lands Sun Sep 20 17:20 UTC. Re-run then.</span>";return;}
+    put("manifest weekend "+monday+" · records: "+man.record_count);
+    // fetch weekend jsonl files via git tree
+    const tree=await j(`https://api.github.com/repos/${REPO}/git/trees/${BR}?recursive=1`);
+    const want=weekendFiles(tree.tree, monday);
+    put("tape files: "+want.map(w=>w.split("/").pop()).join(", "));
+    let lines=[];
+    for(const p of want){
+      const txt=await (await fetch(RAW(p))).text();
+      txt.split("\n").forEach(l=>{l=l.trim();if(l)lines.push({t:new Date(JSON.parse(l).utc),raw:l});});
+    }
+    lines.sort((a,b)=>a.t-b.t);
+    // cutoff: Sunday 17:00 UTC before the Monday
+    const cut=new Date(monday+"T00:00:00Z");cut.setUTCHours(cut.getUTCHours()-7); // Sun 17:00
+    const seg=lines.filter(x=>x.t>=new Date(monday+"T00:00:00Z").setUTCDate(cut.getUTCDate()-6)&&x.t<=cut);
+    put("raw lines fetched: "+lines.length+" · in segment: "+seg.length);
+    let leaves=[];for(const x of seg)leaves.push(await sha256hex(new TextEncoder().encode(x.raw)));
+    while(leaves.length>1){if(leaves.length%2)leaves.push(leaves[leaves.length-1]);
+      const nx=[];for(let i=0;i<leaves.length;i+=2)nx.push(await sha256hex(new TextEncoder().encode(leaves[i]+leaves[i+1])));leaves=nx;}
+    const root=leaves[0]||"EMPTY";
+    put("computed root: "+root.slice(0,32)+"…");
+    put("manifest root: "+man.segment_root.slice(0,32)+"…");
+    if(root===man.segment_root && seg.length===man.record_count)
+      v.innerHTML="<span class='ok'>✓ VERIFIED — the tape in this repo still hashes to the root committed before settlement.</span> (protocol_hash match: "+ (man.protocol_hash===await sha256hex(new TextEncoder().encode(await (await fetch(RAW("PROTOCOL.md"))).text()))) +")";
+    else v.innerHTML="<span class='fail'>✗ MISMATCH — do not trust the results; evidence chain broken.</span>";
+  }catch(e){v.innerHTML="<span class='fail'>fetch failed: "+e+"</span>";}
+}
+function weekendFiles(tree,monday){
+  const m=new Date(monday+"T00:00:00Z"), fri=new Date(m);fri.setUTCDate(fri.getUTCDate()-3);fri.setUTCHours(0);
+  return tree.filter(t=>t.path.startsWith("collected/")).map(t=>t.path)
+    .filter(p=>{const d=p.match(/(\d{4}-\d{2}-\d{2})\.jsonl/);if(!d)return false;const x=new Date(d[1]+"T00:00:00Z");return x>=new Date(fri.getTime()-864e5)&&x<=m;});
+}
+</script>
+</body>
+</html>
