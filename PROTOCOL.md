@@ -4,6 +4,16 @@ forward weekend — these edits are pre-declaration (no new outcomes observed si
 hashing), so folds remain clean. Change log at bottom.**
 Track: Bitget AI Hackathon S2 — Alpha Factory → After-Hours Information Pricing
 
+**Timezone note (reproducibility):** all protocol timestamps are **UTC**.
+Local machine time is America/Sao_Paulo (UTC−3) in this environment; the
+Windows task trigger "Thu 21:45 local" exists only to wake the daemon
+early — the daemon itself sleeps until the **Fri 00:00 UTC** window and
+every stored record carries UTC ISO timestamps. No protocol claim depends
+on local time. (Correction: an earlier message wrongly stated
+"Thu 21:45 BDT = Fri 00:00 UTC"; BDT is UTC+6. The equivalence is
+Thu 00:00 UTC = Thu 06:00 BDT; irrelevant to the protocol, fixed for the
+record.)
+
 ---
 
 ## 0. Research question (final wording — tone-limited by design)
@@ -23,8 +33,9 @@ H3 (reversal) are all reportable results.
 | Layer | Source | Status |
 |---|---|---|
 | A. Historical daily perp bars | Bitget public API, 2026-06-16 → | collected (90 bars, 12 weekends) |
-| B. Underlying daily prints (open/close) | Yahoo Finance chart API, aligned US sessions | collected |
-| C. Live hourly weekend snapshots: bid, ask, size, mid, spread_bps, OI, funding, index, mark, volume | `weekend_collector.py` → `D:\wk-probes\collected\*.jsonl` | **FROZEN schedule, runs Thu 21:45 BDT weekly (Task Scheduler `WeekendDeskCollector`)** |
+| B. Underlying daily prints | Yahoo chart API **raw `quote` Open/Close only — never `adjclose`/adjusted series**. Corporate actions, if any, are recorded as flags beside the row, never handled by manual removal after seeing results. | collected |
+| C. Live hourly weekend snapshots: bid, ask, size, mid, spread_bps, OI, funding, index, mark, volume | `weekend_collector.py` → `D:\wk-probes\collected\*.jsonl` | **FROZEN schedule, runs Thu 21:45 local (= Fri 00:00 UTC window start), samples all weekend** |
+| D. Funding settlements | Bitget `history-fund-rate` endpoint (verified available for SPYUSDT: rows at 00/08/16 UTC) | fetched per-trade by engine |
 
 Collector frozen fields/timestamps must never be edited after a weekend has
 been observed. No "discovering" a better sample time.
@@ -84,14 +95,31 @@ been observed. No "discovering" a better sample time.
 - **Fee:** taker 0.06% per side (Bitget futures USDT-perp tier-0 rate; if
   actual account tier differs at submission, recompute with the real rate —
   the number, never the method, is fixed).
-- **Funding (sign convention frozen):** funding paid LONG→SHORT when rate >0.
-  Strategy accrues `−sign(position) × Σ fundingRate × notional` over all
-  funding settlements whose timestamp falls in (entry, exit]. Rates from
-  Layer C `funding` field. Weekend holds typically cross 8–16 settlements;
-  no "computed later."
+- **Funding:** engine uses **actual settlement records** from
+  `GET /api/v2/mix/market/history-fund-rate` (rows with `fundingTime`),
+  accruing `−sign(position) × Σ rate × notional` over settlements with
+  `fundingTime ∈ (entry, exit]` (8h cycle: 00/08/16 UTC). The ticker
+  `fundingRate` snapshot is a diagnostic, NOT the accounting source.
+  If settlement rows are missing/unreconstructable for an interval, the
+  observation is reported as "funding not reconstructable" and funding is
+  excluded from that row's net PnL with a visible flag — never invented
+  from the snapshot.
+- **Strategy notional (FROZEN):** 1,000 USDT per position. All depth and
+  impact tests are evaluated against exactly this size. Book capital is
+  defined relative to it (§4 sizing = 1× notional = 1,000 USDT, no
+  leverage beyond 1×, no pyramiding).
 - **Slippage:** 50% of spread at entry + 50% at exit (top-of-book snapshot).
-- **Impact haircut:** +10 bps per side if assumed position notional > 2×
-  displayed top-of-book depth at Sun 16:00.
+- **Symmetric liquidity gates (entry AND exit):** the spread/depth checks
+  apply at BOTH anchors — Sun 16:00 entry and Mon 20:00 exit. Each trade
+  row reports `entry execution quality` and `exit execution quality`
+  separately (spread_bps, depth, gate pass/fail). An exit-side gate failure
+  is a **FAILURE: exit not executable** observation — kept in all
+  denominators with the entry fill counted (you cannot unwind a real
+  position for free in a simulation that pretends the exit was clean; for
+  reporting, the position is marked at the Mon 20:00 mid with the failure
+  flagged). Never discarded.
+- **Impact haircut:** +10 bps per side if displayed top-of-book depth on the
+  traded side < 2× strategy notional (i.e. < 2,000 USDT) at that anchor.
 - **Position sizing (frozen):** 1× of allocated book capital per signal
   (no pyramiding, no vol-scaling — vol-scaling is a post-hoc knob).
 - Every headline number ships as `gross → net` pair with each deduction
@@ -129,11 +157,17 @@ Weekend series (12 historical + forwards as they arrive)
 
 ```
 SIGNAL:   w = SPY perp mid(Sun 16:00 UTC) / mid(Fri 21:00 UTC) − 1
-DECISION: if w > 0 -> LONG SPY perp; if w < 0 -> SHORT; if w == 0 -> no trade.
+DECISION: w > 0 -> LONG; w < 0 -> SHORT; w == 0 (exact, within stored
+          precision) -> NO POSITION. The no-position case is recorded and
+          stays in the denominator of every statistic. It is a specified
+          outcome, not an omission.
 ENTRY:    §4 executable prices at Sun 16:00 collector sample.
 EXIT:     §4 executable prices at Mon 20:00 UTC collector sample
           (fallback Mon 20:00 daily-bar close print).
-SIZE:     1x book capital, no leverage beyond 1x, no pyramiding.
+SIZE:     1,000 USDT notional, 1x, no leverage, no pyramiding.
+CLAIM SCOPE: the tested hypothesis is DIRECTIONAL information — the sign
+          of weekend repricing. Magnitude prediction is NOT claimed and
+          is not what sign(w) tests.
 NO threshold X. No spread filter Y. No persistence filter. No regime switch.
 ```
 
@@ -251,13 +285,39 @@ report must cite these tables.
 
 ## 9. Reporting metrics (Alpha Factory judging sheet)
 
-Sharpe, Sortino, max drawdown, turnover, OOS-vs-IS Sharpe decay ratio,
-rolling 30-day Sharpe, OOS weekend count n stated everywhere. Label every
-figure **OBSERVED** (computed from data here) / **ESTIMATED** (cost models)
-/ **TARGETED** (projection). No unlabeled numbers.
+**Hero section (submission front page) = FORWARD/WALK-FORWARD ONLY:**
+```
+Forward OOS net return | Sharpe | Sortino | MDD | Turnover |
+Baseline excess | n weekend events
+— each printed with "35 calendar days / ~4 independent weekend events"
+```
+Historical exploratory figures (t=1.43, IR 0.35 etc.) live in a clearly
+labeled **"Pre-registration context / exploratory"** section — never the
+hero, because they are easy to misread as alpha evidence.
+
+Judging-sheet fields: Sharpe, Sortino, max drawdown, turnover,
+OOS-vs-IS Sharpe decay ratio, rolling 30-day Sharpe, OOS weekend count n
+stated everywhere. Label every figure **OBSERVED** (computed from data
+here) / **ESTIMATED** (cost models) / **TARGETED** (projection). No
+unlabeled numbers.
 
 ## 10. Change log discipline
 
 This file is hashed on write; any edit after 2026-09-14 18:00 UTC gets a
 dated changelog entry explaining what changed and why, with the affected
 validation fold clearly flagged as no longer clean.
+
+### Change log
+- **2026-09-14 (pre-freeze):** v1.0 → v1.1 — SPY-primary, sign-only rule,
+  walk-forward design. No outcomes observed after edits; folds clean.
+- **2026-09-15 (Round 4):** §6 selection-bias admission + baseline
+  decomposition; §6c constraints; §6d moat. Documentation only, strategy
+  untouched.
+- **2026-09-15 (Round 5):** timezone wording fix; funding accounting →
+  actual settlement records (endpoint verified live); notional frozen at
+  1,000 USDT; symmetric entry/exit liquidity gates; w==0 case specified;
+  raw-price lock; directional claim scope; exploratory stats moved out of
+  hero section. **All edits precede the first forward weekend (Sep 18-20)
+  and touch no prediction rule, timestamp, or direction — folds remain
+  clean.** After the Fri 00:00 UTC window start (Sep 18), this file is
+  immutable.
