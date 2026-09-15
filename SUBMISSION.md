@@ -50,6 +50,7 @@ Value delivered: (a) a reproducible after-hours directional tool with a 10-line 
 5. Sealed pre-registered prediction (PREDICTION_SEALED.md) with self-declared failure conditions.
 6. Deterministic engine (`engine.py`): forward + historical modes, gross→net itemization; synthetic-weekend self-test passes all assertions (anchor matching, gate failure kept in denominator, fill direction on ask/bid).
 7. Walk-forward runner folds defined; executed on whatever weekend blocks exist by 9/21.
+8. **Verification machine:** tamper-evident tape (`tape.py`) — collector JSONL hash-chained; per-weekend Merkle root over records up to a frozen Sun 17:00 UTC cutoff, committed to `results/weekend_<date>/manifest.json` and posted publicly on X **before settlement** (any later edit → root mismatch; tamper-tested). **Witness-only settlement agent** (`settle_forward.py`): verifies the tape, runs the frozen engine exactly once, reports net PnL with an Always-Long baseline counterfactual, commits and pushes unedited, emits the settlement post — structurally no path to re-runs, timestamp swaps, asset swaps, or observation dropping. Three scheduled tasks (collector → root commit → settlement) run with the author out of the loop.
 
 **Not built / known limits (stated up front):** n=12 historical weekends (product age; irreducible); executable entry/exit evidence exists only for weekends after collector start (Sep 18–20 = first, and the only clean forward event pre-deadline); native-gap correlation rests on n=9; strategy capacity unproven above ~$1k notional.
 

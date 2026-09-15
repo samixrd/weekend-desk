@@ -51,6 +51,8 @@ forward test and walk-forward folds.
 | `PREDICTION_SEALED.md` | Pre-registered forward prediction + declared failure conditions |
 | `weekend_collector.py` | Hourly microstructure recorder (frozen schedule, UTC JSONL, append-only) |
 | `engine.py` | Deterministic strategy executor: forward (executable) + historical (descriptive) modes |
+| `tape.py` | Tamper-evident tape: hash-chain + weekend Merkle roots (Sun 17:00 UTC cutoff), `verify` PASS/FAIL table |
+| `settle_forward.py` | Witness-only settlement agent: verify → settle once → publish unedited |
 | `walk_forward.py` | Walk-forward fold runner (§5 of protocol) |
 | `weekend_probes.py`, `attack_round3.py`, `baseline_probe.py`, `spy_decomp.py` | The exploratory evidence battery |
 | `collected/` | Raw weekend JSONL tape |
@@ -74,4 +76,25 @@ funding not reconstructable) stay in every denominator. If the forward
 test fails, this README gets updated with the negative result — that is
 pre-committed in `PREDICTION_SEALED.md`, not a slogan.
 
-*Weekend Desk — humans sleep; the tape doesn't. We measured what it knows.*
+## Verification machine (Module 1 + 3)
+
+- **`tape.py`** — tamper-evident tape: the collector's raw JSONL is
+  hash-chained; each weekend's records up to a **frozen Sun 17:00 UTC
+  cutoff** (before any settlement) are committed as a Merkle root, posted
+  publicly (X) and stored in `results/weekend_<date>/manifest.json`
+  (protocol/prediction/collector hashes + commit + root + counts).
+  The weekend dataset is cryptographically committed before settlement,
+  with the commitment publicly timestamped; any later alteration produces
+  a root mismatch — `python tape.py verify` prints the PASS/FAIL table.
+  Tamper-tested: single-byte edits to any past record flip MERKLE to FAIL.
+- **`settle_forward.py`** — witness-only settlement agent: verify tape →
+  run the frozen engine **exactly once** → report net PnL, gates, funding,
+  and the Always-Long baseline counterfactual → commit & push unedited →
+  emit the settlement X card. Structurally it cannot change the rule, the
+  timestamp, the asset, the costs, or retry until the result looks good.
+- Schedule: `WeekendDeskCollector` (weekly, from Fri 00:00 UTC) →
+  `WeekendDeskTape` (Sun 17:20 UTC root commit) → `WeekendDeskSettle`
+  (Mon 21:30 UTC witness settlement). The author is not in the loop.
+
+*Weekend Desk — a deliberately simple alpha inside a deliberately serious
+verification machine.*

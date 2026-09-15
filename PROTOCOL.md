@@ -321,3 +321,5 @@ validation fold clearly flagged as no longer clean.
   and touch no prediction rule, timestamp, or direction — folds remain
   clean.** After the Fri 00:00 UTC window start (Sep 18), this file is
   immutable.
+
+- **2026-09-16 (Module 1+3):** added tamper-evident tape (tape.py, frozen Sun 17:00 UTC root cutoff) and witness-only settlement agent. Verification/evidence layer only — no alpha rule, timestamp, asset, or cost parameter touched; folds remain clean.
