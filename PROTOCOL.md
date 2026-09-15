@@ -143,6 +143,24 @@ parameters, so there is no selection bias to disclose — the rule was
 specified as *maximal simplicity* before forward testing. Descriptive
 IS statistics (+0.30%/wk, IR 0.41, t=1.43, long leg +0.41% n=5, short leg
 +0.22% n=7) are labeled **IN-SAMPLE DESCRIPTIVE — not a performance claim.**
+
+**Selection-bias admission (mandatory sentence):**
+> "The frozen `sign(w)` direction was selected during exploratory discovery;
+> therefore all pre-freeze performance is descriptive and not claimed as
+> unbiased alpha. The strategy's first confirmatory evidence is the locked
+> forward/walk-forward evaluation, with no parameter, asset, timestamp, or
+> execution-rule changes permitted after sealing."
+
+**Baseline decomposition (SPY perp Monday session, n=12, descriptive only):**
+```
+E[Mon]       = +0.04%/wk   (always-long baseline)
+E[Mon | w>0] = +0.41% (n=5)   E[Mon | w<0] = −0.22% (n=7)
+Long-leg excess over baseline = +0.37% | Short-leg excess = +0.18%
+Strategy minus always-long    = +0.26%/wk, IR 0.35, t = +1.22
+```
+The short leg profits because post-down-weekend Mondays are *negative*,
+not because baseline drift carries it; but t=1.22 confirms the IS evidence
+is weak and the forward test is the real judge.
 The claim rests only on: (a) walk-forward blocks (§5) and (b) the frozen
 forward weekend Sep 19–20 with pre-registered prediction.
 
@@ -168,6 +186,52 @@ per-fold IS-fitted variants may be reported as exploratory, never headline.
 10. **No looking at Sunday outcome then touching the Monday rule.**
    Collector samples are written append-only; strategy code reads them
    mechanically. Any rule edit after a weekend starts is a protocol break.
+
+## 6c. Round-4 clarifications (constraints, not rule changes)
+
+- **Untradeable ≠ no trade.** If the sealed failure gates trip (spread,
+  depth), the observation is recorded as **FAILURE: not executable** and
+  counted in the denominator of every hit-rate/PnL statistic. It is never
+  silently dropped — dropping is a post-hoc filter.
+- **30 bps / $1,000 notional are CAPACITY/OPERATIONAL constraints, not
+  alpha parameters.** They alter no directional prediction; they only
+  determine whether the predicted trade could physically be executed at
+  retail size. Chosen from exchange-tier conventions, not from searching
+  weekend outcomes.
+- **Two distinct metrics, never conflated:**
+  - *Research target:* native-equity Monday opening gap (Yahoo print) →
+    establishes predictive content only.
+  - *Trading outcome:* Sun 16:00 executable perp entry → Mon 20:00
+    executable perp exit, net of §4 → establishes tradeability only.
+  A positive research result with a negative trading outcome is a valid,
+  reportable conclusion ("predictive but not capturable").
+- **Deterministic timestamp matching (reproducibility):** anchor = the
+  collector sample with smallest |ts − target_utc| and tolerance ≤ 10 min;
+  ties → earlier sample; if none within tolerance, fallback is the daily
+  bar print in fixed precedence (Sat-open bar for Fri anchor; Mon-bar-open
+  for Sun-16 anchor; Mon-bar values for Mon exit). No manual candle
+  selection, ever. Raw collector files + this rule must let any judge
+  reconstruct every anchor.
+- **OI / funding / spread / index / mark are diagnostics and execution
+  controls ONLY.** They are not alpha inputs. Any future filter built on
+  them requires a NEW declared research fold with fresh forward data —
+  not the current sealed one.
+- **No-rescue clause (pre-committed):** if Sep 21 net PnL is negative or
+  baseline-adjusted forward return < 0, the submission reports **"forward
+  validation failed"** with the full machinery. No timestamp swaps, no
+  asset swaps (SPY→QQQ), no OI filters, no weekend deletions. A failed
+  falsification test executed cleanly is still a stronger entry than a
+  rescued number.
+
+## 6d. Competitive positioning (moat statement)
+
+"We trade SPY on weekends" is the obvious reading of the named sub-theme and
+is copyable in an afternoon. Our claimed contribution is the **falsification
+apparatus**: executable bid/ask accounting, funding sign conventions,
+baseline decomposition, placebo windows, crypto-beta purge, sealed
+pre-registration, and a live forward test — i.e., *whether the obvious
+strategy survives contact with real weekend microstructure*. The strategy
+is a test vehicle for the methodology.
 
 ## 7. Baselines that must be beaten (report table)
 
